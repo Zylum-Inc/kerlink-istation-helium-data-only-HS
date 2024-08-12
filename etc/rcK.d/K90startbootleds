@@ -1,0 +1,69 @@
+#!/bin/sh
+STATUS_LED_SYSPATH="/sys/class/leds/status"
+
+start_boot_set_leds()
+{
+	# status led
+	echo "timer" > "${STATUS_LED_SYSPATH}/trigger"
+	echo "100" > "${STATUS_LED_SYSPATH}/delay_on"
+	echo "900" > "${STATUS_LED_SYSPATH}/delay_off"
+
+	# lan network interface leds
+	if [ -d "/sys/class/leds/yellow:lan" ]; then
+		echo "netdev" > "/sys/class/leds/yellow:lan/trigger"
+		echo "eth0" > "/sys/class/leds/yellow:lan/device_name"
+		echo "link" > "/sys/class/leds/yellow:lan/mode"
+	fi
+	if [ -d "/sys/class/leds/green:lan" ]; then
+		echo "netdev" > "/sys/class/leds/green:lan/trigger"
+		echo "eth0" > "/sys/class/leds/green:lan/device_name"
+		echo "rx tx" > "/sys/class/leds/green:lan/mode"
+	fi
+
+	# local network interface leds
+	if [ -d "/sys/class/leds/yellow:local" ]; then
+		echo "netdev" > "/sys/class/leds/yellow:local/trigger"
+		echo "eth1" > "/sys/class/leds/yellow:local/device_name"
+		echo "link" > "/sys/class/leds/yellow:local/mode"
+	fi
+	if [ -d "/sys/class/leds/green:local" ]; then
+		echo "netdev" > "/sys/class/leds/green:local/trigger"
+		echo "eth1" > "/sys/class/leds/green:local/device_name"
+		echo "rx tx" > "/sys/class/leds/green:local/mode"
+	fi
+
+	# reset applicative leds (femto)
+	led_trig_list=$(find /sys/class/leds/led*/ -name trigger 2> /dev/null)
+	led_brightness_list=$(find /sys/class/leds/led*/ -name brightness 2> /dev/null)
+	for trigfile in ${led_trig_list}; do
+		echo "none" > ${trigfile}
+	done
+	for bfile in ${led_brightness_list}; do
+		echo "0" > ${bfile}
+	done
+}
+
+power_off_set_leds()
+{
+	# status led
+	echo "heartbeat" > "${STATUS_LED_SYSPATH}/trigger"
+}
+
+case "$1" in
+	start)
+		start_boot_set_leds
+		;;
+	stop)
+		power_off_set_leds
+		;;
+	restart)
+		$0 stop
+		$0 start
+		;;
+	*)
+		echo "Usage: $0 { start | stop | restart }" >&2
+		exit 1
+		;;
+esac
+
+exit 0

@@ -1,0 +1,4 @@
+CHECK PROCESS lorafwd PIDFILE /var/run/lora/lorafwd.pid
+	start program = "/etc/init.d/lorafwd start"
+	stop program = "/etc/init.d/lorafwd stop"
+	onreboot nostart

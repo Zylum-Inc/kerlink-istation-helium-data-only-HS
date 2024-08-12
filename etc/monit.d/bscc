@@ -1,0 +1,8 @@
+check process bscc matching /usr/sbin/bscc
+  start program = "/etc/init.d/bscc start"
+  stop program = "/etc/init.d/bscc stop"
+  onreboot nostart
+
+  # Stop watchdog if 10 restarts occurs in 1 H (Cycle is 10s)
+  if 10 restarts within 360 cycles then stop
+  if 10 restarts within 360 cycles then exec "/usr/bin/monit stop watchdog"

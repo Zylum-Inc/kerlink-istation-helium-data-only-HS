@@ -1,0 +1,43 @@
+# Default IPv6 firewall rules for Keros
+
+*filter
+
+# Allows loopback
+-A INPUT  -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+# ICMPv6, cf. RFC 4890
+-A INPUT  -p icmpv6 -j ACCEPT
+-A OUTPUT -p icmpv6 -j ACCEPT
+
+# TCP resets that we use to REJECT connection attempts
+-A OUTPUT -p tcp --tcp-flags RST RST -j ACCEPT
+# or that we receive (useful to terminate connection if no symmetric rule exist on INPUT)
+-A INPUT  -p tcp --tcp-flags RST RST -j ACCEPT
+
+# SSH
+# outbound
+-A OUTPUT -p tcp --dport ssh -j ACCEPT
+-A INPUT  -p tcp --sport ssh ! --syn -j ACCEPT
+# inbound
+-A INPUT  -p tcp --dport ssh -j ACCEPT
+-A OUTPUT -p tcp --sport ssh -j ACCEPT
+
+# DNS resolution
+-A OUTPUT -p udp --dport domain -j ACCEPT
+-A INPUT  -p udp --sport domain -j ACCEPT
+-A OUTPUT -p tcp --dport domain -j ACCEPT
+-A INPUT  -p tcp --sport domain ! --syn -j ACCEPT
+
+# NTP (outbound)
+-A OUTPUT -p udp --dport ntp -j ACCEPT
+-A INPUT  -p udp --sport ntp -j ACCEPT
+
+# HTTP + HTTPS (outbound)
+-A OUTPUT -p tcp --dport http -j ACCEPT
+-A INPUT  -p tcp --sport http ! --syn -j ACCEPT
+-A OUTPUT -p tcp --dport https -j ACCEPT
+-A INPUT  -p tcp --sport https ! --syn -j ACCEPT
+
+COMMIT
+

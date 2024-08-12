@@ -1,0 +1,8 @@
+# Allow LLMNR queries on input and responses on output
+# Cf. RFC 4795
+*filter
+-A INPUT -p udp --dport 5355 -j ACCEPT
+-A OUTPUT -p udp --sport 5355 -j ACCEPT
+-A INPUT -p tcp --dport 5355 -j ACCEPT
+-A OUTPUT -p tcp --sport 5355 -j ACCEPT
+COMMIT

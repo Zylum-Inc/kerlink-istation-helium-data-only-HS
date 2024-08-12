@@ -1,0 +1,103 @@
+{
+	"SX1301_conf": {
+		"lorawan_public": true,
+		"antenna_gain": 6,
+		"antenna_gain_desc": "Antenna gain, in dBi",
+		"insertion_loss": 0.5,
+		"insertion_loss_desc": "Insertion loss, in dB",
+		"radio_0": {
+			"enable": true,
+			"freq": 922300000,
+			"tx_enable": true,
+			"tx_freq_min": 920900000,
+			"tx_freq_max": 923300000
+		},
+		"radio_1": {
+			"enable": true,
+			"freq": 923100000,
+			"tx_enable": false
+		},
+		"chan_multiSF_0": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 921.9 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": -400000
+		},
+		"chan_multiSF_1": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 922.1 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": -200000
+		},
+		"chan_multiSF_2": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 922.3 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": 0
+		},
+		"chan_multiSF_3": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 922.5 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": 200000
+		},
+		"chan_multiSF_4": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 922.7 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": 400000
+		},
+		"chan_multiSF_5": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 922.9 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": -200000
+		},
+		"chan_multiSF_6": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 923.1 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": 0
+		},
+		"chan_multiSF_7": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 923.3 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": 200000
+		},
+		"chan_Lora_std": {
+			"desc": "disable",
+			"enable": false,
+			"radio": 1,
+			"if": 0,
+			"bandwidth": 125000,
+			"spread_factor": 10
+		},
+		"lbt_cfg": {
+			"enable": true,
+			"rssi_target": -65,
+			"chan_cfg": [
+				{ "freq_hz": 921900000, "scan_time_us": 5000 },
+				{ "freq_hz": 922100000, "scan_time_us": 5000 },
+				{ "freq_hz": 922300000, "scan_time_us": 5000 },
+				{ "freq_hz": 922500000, "scan_time_us": 5000 },
+				{ "freq_hz": 922700000, "scan_time_us": 5000 },
+				{ "freq_hz": 922900000, "scan_time_us": 5000 },
+				{ "freq_hz": 923100000, "scan_time_us": 5000 },
+				{ "freq_hz": 923300000, "scan_time_us": 5000 }
+			]
+		}
+	},
+	"gateway_conf": {
+		"beacon_enable": false,
+		"beacon_period": 128,
+		"beacon_freq_hz": 923100000,
+		"beacon_datarate": 9,
+		"beacon_bw_hz": 125000,
+		"beacon_power": 14,
+		"beacon_infodesc": [
+			{ "latitude": 0.0, "longitude": 0.0 },
+			{ "netid": "0" }
+		]
+	}
+}

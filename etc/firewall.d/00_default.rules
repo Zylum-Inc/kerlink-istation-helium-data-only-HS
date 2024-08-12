@@ -1,0 +1,49 @@
+# Default IPv4 firewall rules for Keros
+
+* filter
+
+# Open output port for DNS request
+-A OUTPUT -p udp --dport domain -j ACCEPT
+-A INPUT  -p udp --sport domain -j ACCEPT
+-A OUTPUT -p tcp --dport domain -j ACCEPT
+-A INPUT  -p tcp --sport domain ! --syn -j ACCEPT
+
+# Allows loopback
+-A INPUT  -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+# SSH
+-A OUTPUT -p tcp --dport ssh -j ACCEPT
+-A INPUT  -p tcp --sport ssh ! --syn -j ACCEPT
+
+-A OUTPUT -p tcp --sport ssh -j ACCEPT
+-A INPUT  -p tcp --dport ssh -j ACCEPT
+
+# NTP Out
+-A OUTPUT -p udp --dport ntp -j ACCEPT
+-A INPUT  -p udp --sport ntp -j ACCEPT
+
+# outbound HTTP + HTTPS
+-A OUTPUT -p tcp --dport http -j ACCEPT
+-A INPUT  -p tcp --sport http ! --syn -j ACCEPT
+-A OUTPUT -p tcp --dport https -j ACCEPT
+-A INPUT  -p tcp --sport https ! --syn -j ACCEPT
+
+# ICMP
+-A OUTPUT -p icmp -j ACCEPT
+-A INPUT  -p icmp -j ACCEPT
+
+# TCP resets that we use to REJECT connection attempts
+-A OUTPUT -p tcp --tcp-flags RST RST -j ACCEPT
+# or that we receive (useful to terminate connection if no symmetric rule exist on INPUT)
+-A INPUT  -p tcp --tcp-flags RST RST -j ACCEPT
+
+# DHCP client
+-A OUTPUT -p udp --sport bootpc --dport bootps -j ACCEPT
+-A INPUT  -p udp --dport bootpc --sport bootps -j ACCEPT
+# DHCP server (e.g. on eth1)
+-A INPUT  -p udp --dport bootps --sport bootpc -j ACCEPT
+-A OUTPUT -p udp --sport bootps --dport bootpc -j ACCEPT
+
+COMMIT
+

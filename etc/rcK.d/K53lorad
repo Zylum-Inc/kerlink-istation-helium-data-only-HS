@@ -1,0 +1,143 @@
+#!/bin/sh -e
+
+### BEGIN INIT INFO
+# Provides:        lorad
+# Required-Start:  $remote_fs $syslog
+# Required-Stop:   $remote_fs $syslog
+# Default-Start:   5
+# Default-Stop:    0 6
+# Short-Description: Start LoRa daemon
+### END INIT INFO
+
+PIDFILE="/var/run/lora/lorad.pid"
+
+[ -f /etc/default/lorad ] && . /etc/default/lorad
+
+alive() { [ "${1}" ] && kill -0 ${1} 2> /dev/null ; }
+pid() { [ -f ${PIDFILE} ] && cat ${PIDFILE} || pidof lorad ; }
+
+check_fpga()
+{
+	# Create the directory to store not persistent files.
+	mkdir -p "/var/run/lora"
+
+	# Loramodem script will test version before update.
+	# (unless --force option is used).
+	timeout -t 2000 -s 2 \
+		"loramodem" -p ${FPGA_FIRMWARE_FILE} \
+		| tee "/var/run/lora/check_fpga.log"
+
+	# Push log to syslog.
+	cat "/var/run/lora/check_fpga.log" | logger -p local1.notice -t lorad
+
+	# Check if FPGA was programmed.
+	! grep -q "Update FPGA" "/var/run/lora/check_fpga.log"
+}
+
+serial()
+{
+	awk 'BEGIN { FS="\"" }
+	/cpu/,/serial_number/ { serial = $(NF - 1) }
+	END { print serial }' /tmp/board_info.json
+}
+
+start()
+{
+	# Tell sysupgrade to keep lorad configuration files during upgrade
+	mkdir -p "/etc/sysupgrade.d"
+	echo "/etc/default/lorad" > "/etc/sysupgrade.d/lorad.conf"
+	echo "${CONFIGURATION_FILE}" >> "/etc/sysupgrade.d/lorad.conf"
+	# Do not start lorad if disabled
+	if [ "x${DISABLE_LORAD}" = "xyes" ]; then
+		echo "Lorad disabled by configuration"
+		exit 0
+	fi
+	# Platform specific arguments.
+	case "$(fslotpreg getplatform)" in
+		IBTS)
+			CONFIGURATION_FILE="/tmp/calib_loraloc.json ${CONFIGURATION_FILE}"
+			EXTRA_ARGS="-g /dev/nmea1 ${EXTRA_ARGS}"
+			BINARY="lorad-ibts" ;;
+		ISTATION)
+			CONFIGURATION_FILE="${CONFIGURATION_FILE}"
+			EXTRA_ARGS="-g /dev/nmea1 ${EXTRA_ARGS}"
+			BINARY="lorad-wiis" ;;
+		IFEMTO)
+			CONFIGURATION_FILE="${CONFIGURATION_FILE}"
+			BINARY="lorad-wifc" ;;
+		IFEVO)
+			CONFIGURATION_FILE="${CONFIGURATION_FILE}"
+			BINARY="lorad-fevo" ;;
+	esac
+
+	# Create the version file.
+	${BINARY} --version > /tmp/lorad_version
+
+	# Create the directory to store not persistent files.
+	mkdir -p "/var/run/lora"
+
+	# Find the running pid and return if already alive.
+	if alive $(pid) ; then return 0; fi
+
+	# Add serial to arguments.
+	local SERIAL=$(serial)
+
+	if [ -n "${SERIAL}" ]
+	then
+		EXTRA_ARGS="-s ${SERIAL} ${EXTRA_ARGS}"
+	fi
+
+	# Start the LoRa daemon.
+	${BINARY} ${EXTRA_ARGS} ${CONFIGURATION_FILE}
+
+	# Start monitoring.
+	monit monitor lorad
+}
+
+stop()
+{
+	# Stop monitoring.
+	monit unmonitor lorad
+
+	# Stop the LoRa daemon.
+	local PID=$(pid)
+	if alive ${PID}
+	then
+		kill -TERM ${PID} && sleep 1
+		if alive ${PID}
+		then
+			kill -KILL ${PID} && sleep 1
+		fi
+	fi
+
+	# Check if the process has exited.
+	! alive ${PID}
+}
+
+case "${1}" in
+	start)
+		echo "Starting lorad 1.3.0"
+		start
+		;;
+	stop)
+		echo "Stopping lorad 1.3.0"
+		stop
+		;;
+	restart | force-reload)
+		echo "Restarting lorad 1.3.0"
+		stop && start
+		;;
+	check_fpga)
+		case "$(fslotpreg getplatform)" in
+			IBTS)
+				echo "Checking lorad 1.3.0 FPGA(s) firmware version"
+				check_fpga ;;
+		esac
+		;;
+	*)
+		echo >&2 "Usage: ${0##*/} { start | stop | restart | force-reload | check_fpga }"
+		exit 1
+		;;
+esac
+
+exit 0

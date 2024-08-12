@@ -1,0 +1,3 @@
+check process statm matching /usr/bin/statm every 10 cycles
+    start program = "/etc/init.d/statm start"
+    stop program = "/etc/init.d/statm stop"

@@ -1,0 +1,6 @@
+# Allow mDNS queries on input and responses on output
+# Cf. RFC 6762
+*filter
+-A INPUT -p udp --dport 5353 -j ACCEPT
+-A OUTPUT -p udp --dport 5353 -j ACCEPT
+COMMIT

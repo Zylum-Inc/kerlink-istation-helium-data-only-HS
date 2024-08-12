@@ -1,0 +1,67 @@
+#!/bin/sh
+
+. /etc/init.d/functions
+
+[ -f /etc/default/bscc ] && . /etc/default/bscc
+
+BINARY="/usr/sbin/bscc"
+
+OPTIONS="-t2 "
+
+case "$1" in
+	start)
+		printf "Starting BSC Client .... "
+		if [ "x${DISABLE_BSCC}" = "xyes" ]; then
+			echo "Bscc disabled by configuration"
+			success
+		else
+			mkdir -p /user/bscc
+
+			#workaround PR9478
+			[ -f /etc/monit.d/openvpn_tunnel ] && rm /etc/monit.d/openvpn_tunnel
+			[ -f /etc/monit.d/openvpn_server ] && rm /etc/monit.d/openvpn_server && reboot
+
+			#Firewall rules to enable TCP (HTTP) request/response on port 8080. Typically a upload/download
+			# --syn equivalent to --tcp-flags SYN,RST,ACK SYN
+			iptables -I OUTPUT -p tcp --dport 8080 -j ACCEPT
+			iptables -I INPUT -p tcp --sport 8080 ! --syn  -j ACCEPT    
+
+			${BINARY} ${OPTIONS}
+
+			if [ $? -eq 0 ]; then
+				success
+			else
+				failure
+			fi
+			monit monitor bscc
+		fi
+		echo ""
+		;;
+
+	stop)
+		printf "Stopping BSC Client .... " $BINARY
+
+		#Remove firewall rules 
+		iptables -D OUTPUT -p tcp --dport 8080 -j ACCEPT
+		iptables -D INPUT -p tcp --sport 8080 ! --syn -j ACCEPT    
+
+		kill -s TERM `pidof basename $BINARY`
+		monit unmonitor bscc
+
+		if [ $? -eq 0 ]; then success
+		else failure
+		fi
+		echo ""
+		;;
+
+	restart)
+		$0 stop
+		$0 start
+		;;
+	*)
+		echo "Usage: $0 { start | stop | restart }" >&2
+		exit 1
+		;;
+esac
+
+exit 0

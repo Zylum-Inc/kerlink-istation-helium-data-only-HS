@@ -1,0 +1,4 @@
+check process snmpd matching "snmpd"
+    start program = "/etc/init.d/lora_snmp start"
+    stop program = "/etc/init.d/lora_snmp stop"
+    onreboot nostart

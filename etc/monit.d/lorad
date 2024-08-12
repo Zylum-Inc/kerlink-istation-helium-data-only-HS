@@ -1,0 +1,4 @@
+CHECK PROCESS lorad PIDFILE /var/run/lora/lorad.pid
+	start program = "/etc/init.d/lorad start"
+	stop program = "/etc/init.d/lorad stop"
+	onreboot nostart

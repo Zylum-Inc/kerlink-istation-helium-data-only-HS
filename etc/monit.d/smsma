@@ -1,0 +1,3 @@
+check process smsma matching /usr/bin/smsma every 10 cycles
+    start program = "/etc/init.d/smsma start"
+    stop program = "/etc/init.d/smsma stop"

@@ -1,0 +1,161 @@
+#!/bin/sh -e
+
+### BEGIN INIT INFO
+# Provides:        lorafwd
+# Required-Start:  $remote_fs $syslog
+# Required-Stop:   $remote_fs $syslog
+# Default-Start:   5
+# Default-Stop:    0 6
+# Short-Description: Start LoRa forwarder
+### END INIT INFO
+
+BINARY="lorafwd"
+PIDFILE="/var/run/lora/lorafwd.pid"
+
+[ -f /etc/default/lorafwd ] && . /etc/default/lorafwd
+
+alive() { [ "${1}" ] && kill -0 ${1} 2> /dev/null ; }
+pid() { [ -f ${PIDFILE} ] && cat ${PIDFILE} || pidof lorafwd ; }
+
+iptables_accept()
+{
+	if [ -n "${1}" ]
+	then
+		local RULE="OUTPUT -t filter -p udp --dport ${1} -j ACCEPT"
+		iptables -C ${RULE} 2> /dev/null || iptables -I ${RULE}
+
+		local RULE="INPUT -t filter -p udp --sport ${1} -j ACCEPT"
+		iptables -C ${RULE} 2> /dev/null || iptables -I ${RULE}
+	fi
+}
+
+toml_read()
+{
+	awk -v k0=${1} 'BEGIN {
+		FS = "\\s*=\\s*";
+		split(k0, a, ".");
+		for (i in a) {
+			j = index(gensub(/\./, "@", i, k0), "@");
+			k1 = substr(k0, 0, j - 1);
+			k2 = substr(k0, j + 1);
+			ks[k1] = k2; t = 1; tk = k2;
+		}
+	} /^\s*\[/ {
+		k1 = $1;
+		sub(/#.*$/, "", k1);
+		sub(/\s*\]\s*$/, "", k1);
+		sub(/^\s*\[\s*/, "", k1);
+		k2 = ks[k1]; t = 0;
+		if (length(k2) > 0) { t = 1; tk = k2; }
+	} t && gensub(/^\s+/, "", "g", $1) == tk {
+		v = $2;
+		sub(/#.*$/, "", v);
+		sub(/\s+$/, "", v);
+		sub(/"$/, "", v);
+		sub(/^"/, "", v);
+		print v; exit;
+	}'
+}
+
+toml_read_all()
+{
+	for FILE in ${CONFIGURATION_FILE}
+	do
+		local VALUE=$(cat ${FILE} | toml_read ${1})
+		[ -z "${VALUE}" ] || local FINAL=${VALUE}
+	done
+	echo ${FINAL}
+}
+
+gateway_id()
+{
+	EUI64="0x$(
+	awk 'BEGIN { FS="\"" }
+	/EUI64/ { printf( $(NF - 1) ) }
+	' /tmp/board_info.json)"
+
+	if [ -z "$EUI64" ]
+	then
+		EUI64=$(
+		awk 'BEGIN { FS="\"" }
+		/cpu/,/serial_number/ { serial = $(NF - 1) }
+		END { printf("0x7276FF00%.8X", serial) }
+		' /tmp/board_info.json)
+	fi
+
+	echo "$EUI64"
+}
+
+start()
+{
+	# Tell sysupgrade to keep lorafwd configuration files during upgrade
+	mkdir -p "/etc/sysupgrade.d"
+	echo "/etc/default/lorafwd" > "/etc/sysupgrade.d/lorafwd.conf"
+	echo "${CONFIGURATION_FILE}" >> "/etc/sysupgrade.d/lorafwd.conf"
+	# Do not start lorafwd if disabled
+	if [ "x${DISABLE_LORAFWD}" = "xyes" ]; then
+		echo "Lorafwd disabled by configuration"
+		exit 0
+	fi
+	# Create the version file.
+	${BINARY} --version > /tmp/lorafwd_version
+
+	# Create the directory to store files.
+	mkdir -p "/var/run/lora" "/var/lib/lorafwd"
+
+	# Find the running pid and return if already alive.
+	if alive $(pid) ; then return 0; fi
+
+	# Enable firewall rules
+	iptables_accept $(toml_read_all "gwmp.service.uplink")
+	iptables_accept $(toml_read_all "gwmp.service.downlink")
+
+	# Generate a configuration file with default gateway.id value
+	local GWIDFILE=${PIDFILE%/*}/gateway-id.toml
+	echo "gateway.id = $(gateway_id)" > ${GWIDFILE}
+
+	# Start the LoRa forwarder.
+	${BINARY} ${GWIDFILE} ${CONFIGURATION_FILE} ${EXTRA_ARGS}
+
+	# Start monitoring.
+	monit monitor lorafwd
+}
+
+stop()
+{
+	# Stop monitoring.
+	monit unmonitor lorafwd
+
+	# Stop the LoRa forwarder.
+	local PID=$(pid)
+	if alive ${PID}
+	then
+		kill -TERM ${PID} && sleep 1
+		if alive ${PID}
+		then
+			kill -KILL ${PID} && sleep 1
+		fi
+	fi
+
+	# Check if the process has exited.
+	! alive ${PID}
+}
+
+case "${1}" in
+	start)
+		echo "Starting lorafwd 1.2.0"
+		start
+		;;
+	stop)
+		echo "Stopping lorafwd 1.2.0"
+		stop
+		;;
+	restart | force-reload)
+		echo "Restarting lorafwd 1.2.0"
+		stop && start
+		;;
+	*)
+		echo >&2 "Usage: ${0##*/} { start | stop | restart | force-reload }"
+		exit 1
+		;;
+esac

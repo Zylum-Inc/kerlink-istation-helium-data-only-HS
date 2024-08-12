@@ -1,0 +1,9 @@
+# End the firewall by REJECTing traffic
+
+*filter
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
+-A OUTPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+COMMIT
+

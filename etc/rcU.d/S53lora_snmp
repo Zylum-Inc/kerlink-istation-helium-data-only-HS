@@ -1,0 +1,83 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Short-Description:    snmpd agent init script
+### END INIT INFO
+
+. /etc/init.d/functions
+
+[ -f /etc/default/lora-snmp ] && . /etc/default/lora-snmp
+
+BINDIR="/usr/libexec/lora-snmp"
+BINARY="snmpd"
+SNMPD_CONF_FILE="/etc/snmp/snmpd.conf"
+OPTIONS="-C -c ${SNMPD_CONF_FILE} -f -Lo -Ddlmod,trap,klk_notifications"
+
+
+case "$1" in
+	start)
+		printf "Starting SNMP agent .... "
+		if [ "x${DISABLE_LORA_SNMP}" = "xyes" ]; then
+			echo "Lora-snmp disabled by configuration"
+			success
+		else
+			# Serial Number according to the platform
+			. ${BINDIR}/serial_function
+
+			#Remove default RW access to set serial
+			grep -q "rwcommunity $SERIAL" ${SNMPD_CONF_FILE}
+			if [ $? == 1 ] #not found
+			then 
+				echo "${SNMPD_CONF_FILE}: grep result KO"
+				sed -i -r -e "/^rwcommunity/ d" ${SNMPD_CONF_FILE}
+				echo "rwcommunity $SERIAL" >> ${SNMPD_CONF_FILE}
+				sync
+			else
+				echo "${SNMPD_CONF_FILE}: parameter already set !!"
+			fi
+
+			#Firewall rules to enable SNMP inform (inform / inform response)
+			iptables -I OUTPUT -p udp -m udp --dport 10161:10162 -j ACCEPT
+			iptables -I INPUT -p udp -m udp --dport 32768:65535 -j ACCEPT 
+			#Firewall rules to enable SNMP Request (get-request / get-response)
+			iptables -I INPUT -p udp -m udp --dport 10161 -j ACCEPT 
+			iptables -I OUTPUT -p udp -m udp --sport 10161 -j ACCEPT 
+
+			${BINARY} ${OPTIONS} 2>&1 |logger -t SNMP &
+
+			if [ $? -eq 0 ]; then success
+			else failure
+			fi
+
+			monit start snmpd
+		fi
+		echo ""
+		;;
+
+	stop)
+		printf "Stopping SNMP agent .... "
+
+		iptables -D OUTPUT -p udp -m udp --dport 10161:10162 -j ACCEPT
+		iptables -D INPUT -p udp -m udp --dport 32768:65535 -j ACCEPT 
+		iptables -D INPUT -p udp -m udp --dport 10161 -j ACCEPT 
+		iptables -D OUTPUT -p udp -m udp --sport 10161 -j ACCEPT 
+
+		monit stop snmpd
+		killall -9 "snmpd"
+
+		if [ $? -eq 0 ]; then success
+		else failure
+		fi
+		echo ""
+		;;
+
+	restart)
+		$0 stop
+		$0 start
+		;;
+	*)
+		echo "Usage: $0 { start | stop | restart }" >&2
+		exit 1
+		;;
+esac
+
+exit 0

@@ -1,0 +1,61 @@
+{
+	"SX1301_array_conf": [
+		{
+			"loramac_public": true,
+			"board_rx_freq": 922000000,
+			"board_rx_bw": 4000000,
+			"rf_chain_conf": [
+				{
+					"rx_enable": true,
+					"tx_enable": true,
+					"antenna_gain": 6,
+					"insertion_loss": 0.5,
+					"tx_freq_min": 920400000,
+					"tx_freq_max": 928000000
+				}
+			],
+			"SX1301_conf": [
+				{
+					"chip_rf_chain": 0,
+					"chip_center_freq": 921000000,
+					"chan_multiSF_0": { "enable": true, "chan_rx_freq": 920400000, "spread_factor": "7-12" },
+					"chan_multiSF_1": { "enable": true, "chan_rx_freq": 920600000, "spread_factor": "7-12" },
+					"chan_multiSF_2": { "enable": true, "chan_rx_freq": 920800000, "spread_factor": "7-12" },
+					"chan_multiSF_3": { "enable": true, "chan_rx_freq": 921000000, "spread_factor": "7-12" },
+					"chan_multiSF_4": { "enable": true, "chan_rx_freq": 921200000, "spread_factor": "7-12" },
+					"chan_multiSF_5": { "enable": true, "chan_rx_freq": 921400000, "spread_factor": "7-12" },
+					"chan_multiSF_6": { "enable": true, "chan_rx_freq": 921600000, "spread_factor": "7-12" },
+					"chan_multiSF_7": { "enable": true, "chan_rx_freq": 921800000, "spread_factor": "7-12" },
+					"chan_LoRa_std":  { "enable": true, "chan_rx_freq": 920900000, "bandwidth": 250000, "spread_factor": 7 },
+					"chan_FSK":       { "enable": true, "chan_rx_freq": 921500000, "bandwidth": 125000, "bit_rate": 50000 }
+				},
+				{
+					"chip_rf_chain": 0,
+					"chip_center_freq": 923000000,
+					"chan_multiSF_0": { "enable": true, "chan_rx_freq": 922000000, "spread_factor": "7-12" },
+					"chan_multiSF_1": { "enable": true, "chan_rx_freq": 922200000, "spread_factor": "7-12" },
+					"chan_multiSF_2": { "enable": true, "chan_rx_freq": 922400000, "spread_factor": "7-12" },
+					"chan_multiSF_3": { "enable": true, "chan_rx_freq": 922600000, "spread_factor": "7-12" },
+					"chan_multiSF_4": { "enable": true, "chan_rx_freq": 922800000, "spread_factor": "7-12" },
+					"chan_multiSF_5": { "enable": true, "chan_rx_freq": 923000000, "spread_factor": "7-12" },
+					"chan_multiSF_6": { "enable": true, "chan_rx_freq": 923200000, "spread_factor": "7-12" },
+					"chan_multiSF_7": { "enable": true, "chan_rx_freq": 923400000, "spread_factor": "7-12" },
+					"chan_LoRa_std":  { "enable": true, "chan_rx_freq": 922100000, "bandwidth": 250000, "spread_factor": 7 },
+					"chan_FSK":       { "enable": true, "chan_rx_freq": 922700000, "bandwidth": 125000, "bit_rate": 50000 }
+				}
+			]
+		}
+	],
+	"gateway_conf": {
+		"beacon_enable": false,
+		"beacon_period": 128,
+		"beacon_freq_hz": 923400000,
+		"beacon_datarate": 9,
+		"beacon_bw_hz": 125000,
+		"beacon_power": 14,
+		"beacon_infodesc": [
+			{ "latitude": 0.0, "longitude": 0.0 },
+			{ "netid": "0" }
+		]
+	}
+}

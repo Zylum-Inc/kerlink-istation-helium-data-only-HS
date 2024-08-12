@@ -1,0 +1,89 @@
+{
+	"SX1301_conf": {
+		"lorawan_public": true,
+		"antenna_gain": 3,
+		"antenna_gain_desc": "Antenna gain, in dBi",
+		"insertion_loss": 0.5,
+		"insertion_loss_desc": "Insertion loss, in dB",
+		"radio_0": {
+			"enable": true,
+			"freq": 865451250,
+			"tx_enable": true,
+			"tx_freq_min": 865000000,
+			"tx_freq_max": 867000000
+		},
+		"radio_1": {
+			"enable": true,
+			"freq": 866300000,
+			"tx_enable": false
+		},
+		"chan_multiSF_0": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.0625 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": -388750
+		},
+		"chan_multiSF_1": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.2325 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": -218750
+		},
+		"chan_multiSF_2": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.4025 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": -48750
+		},
+		"chan_multiSF_3": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.5725 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": 121250
+		},
+		"chan_multiSF_4": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.84 MHz",
+			"enable": true,
+			"radio": 0,
+			"if": 388750
+		},
+		"chan_multiSF_5": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 865.985 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": -315000
+		},
+		"chan_multiSF_6": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 866.13 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": -170000
+		},
+		"chan_multiSF_7": {
+			"desc": "LoRa, 125 kHz, SF 7-12, 866.275 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": -25000
+		},
+		"chan_FSK": {
+			"desc": "FSK, 125 kHz, 50kbps, 866.7 MHz",
+			"enable": true,
+			"radio": 1,
+			"if": 400000,
+			"bandwidth": 125000,
+			"datarate": 50000
+		}
+	},
+	"gateway_conf": {
+		"beacon_enable": false,
+		"beacon_period": 128,
+		"beacon_freq_hz": 866550000,
+		"beacon_datarate": 8,
+		"beacon_bw_hz": 125000,
+		"beacon_power": 14,
+		"beacon_infodesc": [
+			{ "latitude": 0.0, "longitude": 0.0 },
+			{ "netid": "0" }
+		]
+	}
+}
